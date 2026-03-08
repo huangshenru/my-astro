@@ -1,0 +1,487 @@
+---
+// src/components/WorksGallery.astro
+// 作品展示组件 - 图片网格布局，可传入作品数据，默认显示占位
+import bomList from '../assets/bom-list.png';
+import bomChange1 from '../assets/bom-change-one.png';
+import bomChange2 from '../assets/bom-change-two.png';
+import bomChange3 from '../assets/bom-change-three.png';
+import bomChange4 from '../assets/bom-change-four.png';
+
+import dialogBom from '../assets/dialog-bom.png';
+import submitVersion from '../assets/submit-version.png';
+import submitVersion1 from '../assets/submit-version-one.png';
+import suggestionMaterial from '../assets/suggestion-material.png';
+import editMaterial from '../assets/edit-material.png';
+
+export interface Props {
+  works?: {
+    id: number;
+    title: string;
+    description: string;
+    image: string;
+    alt: string;
+  }[];
+}
+
+const works = [
+  {
+    id: 1,
+    title: 'BOM 列表页',
+    description: '物料清单 · 界面设计',
+    image: bomList,
+    alt: 'BOM 列表界面截图',
+  },
+  {
+    id: 2,
+    title: 'BOM 变更（一）',
+    description: '变更记录 · 交互设计',
+    image: bomChange1,
+    alt: 'BOM 变更界面1',
+  },
+  {
+    id: 3,
+    title: 'BOM 变更（二）',
+    description: '变更对比 · 视觉设计',
+    image: bomChange2,
+    alt: 'BOM 变更界面2',
+  },
+  {
+    id: 4,
+    title: 'BOM 变更（三）',
+    description: '版本差异 · 界面设计',
+    image: bomChange3,
+    alt: 'BOM 变更界面3',
+  },
+  {
+    id: 5,
+    title: 'BOM 变更（四）',
+    description: '变更详情 · 交互稿',
+    image: bomChange4,
+    alt: 'BOM 变更界面4',
+  },
+  {
+    id: 6,
+    title: 'BOM 弹窗',
+    description: '弹窗设计 · 组件库',
+    image: dialogBom,
+    alt: 'BOM 弹窗截图',
+  },
+  {
+    id: 7,
+    title: '确版提交',
+    description: '版本管理 · 界面设计',
+    image: submitVersion,
+    alt: '确版提交界面',
+  },
+  {
+    id: 8,
+    title: '确版提交（二）',
+    description: '版本发布 · 交互设计',
+    image: submitVersion1,
+    alt: '确版提交另一状态',
+  },
+  {
+    id: 9,
+    title: '推荐面料',
+    description: '用户反馈 · 视觉稿',
+    image: suggestionMaterial,
+    alt: '建议反馈界面',
+  },
+  {
+    id: 10,
+    title: '编辑物料',
+    description: '物料编辑 · 界面设计',
+    image: editMaterial,
+    alt: '编辑物料截图',
+  }
+  // ... 其他作品
+] 
+---
+
+{
+  works.length > 0 ? (
+    <main class="works-gallery">
+      <!-- 页面标题区域 -->
+      <div class="gallery-header">
+        <h1>📷 过往作品</h1>
+        <p>视觉创作 · 设计存档 · 点击图片查看详情</p>
+      </div>
+
+      <!-- 作品网格 -->
+      <div class="works-grid">
+        {works.map((work) => (
+          <div
+            href={`/works/${work.id}`}
+            class="work-card-link"
+            title={`查看 ${work.title} 的详细信息`}
+          >
+            <article class="work-card">
+              <img
+                src={work.image?work.image?.src:''}
+                alt={work.alt}
+                loading="lazy"
+                class="work-image"
+              />
+              <div class="work-info">
+                <h2 class="work-title">{work.title}</h2>
+                <p class="work-description">{work.description}</p>
+              </div>
+            </article>
+          </a>
+        ))}
+      </div>
+    </main>
+  ) : (
+    <div class="works-placeholder">
+      <p>✨ 暂无作品，敬请期待 ✨</p>
+    </div>
+  )
+}
+<!-- 图片预览模态框 -->
+<div id="lightbox" class="lightbox">
+  <span class="close">&times;</span>
+  <span class="lightbox-prev">&#10094;</span>   <!-- 左箭头 -->
+  <span class="lightbox-next">&#10095;</span>   <!-- 右箭头 -->
+  <img class="lightbox-content" id="lightbox-img">
+  <div class="caption"></div>
+</div>
+
+<script>
+  // 获取所有作品图片和模态框元素
+  const images = document.querySelectorAll('.work-image');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const closeBtn = document.querySelector('.close');
+  const caption = document.querySelector('.caption');
+  const prevBtn = document.querySelector('.lightbox-prev');
+  const nextBtn = document.querySelector('.lightbox-next');
+
+  let currentIndex = 0; // 当前显示的图片索引
+
+  // 显示模态框，并设置指定索引的图片
+  function showImage(index) {
+    if (!images.length) return;
+    // 循环处理索引
+    if (index < 0) index = images.length - 1;
+    if (index >= images.length) index = 0;
+    currentIndex = index;
+
+    const img = images[currentIndex];
+    lightboxImg.src = img.getAttribute('src');
+    caption.textContent = img.getAttribute('alt') || '作品大图';
+    lightbox.classList.add('show');
+  }
+
+  // 关闭模态框
+  function closeLightbox() {
+    lightbox.classList.remove('show');
+    lightboxImg.src = ''; // 清空图片
+  }
+
+  // 为每张图片绑定点击事件
+  images.forEach((img, idx) => {
+    img.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault(); // 阻止链接跳转
+      showImage(idx); // 传入点击的图片索引
+    });
+  });
+
+  // 上一张
+  prevBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showImage(currentIndex - 1);
+  });
+
+  // 下一张
+  nextBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showImage(currentIndex + 1);
+  });
+
+  // 点击关闭按钮
+  closeBtn.addEventListener('click', closeLightbox);
+
+  // 点击遮罩背景关闭
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) {
+      closeLightbox();
+    }
+  });
+
+  // 键盘事件：ESC关闭，左右箭头切换
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('show')) return;
+
+    switch (e.key) {
+      case 'Escape':
+        closeLightbox();
+        break;
+      case 'ArrowLeft':
+        showImage(currentIndex - 1);
+        break;
+      case 'ArrowRight':
+        showImage(currentIndex + 1);
+        break;
+    }
+  });
+
+  // 可选：预加载相邻图片，提升切换速度（简单实现）
+  function preloadImages() {
+    const srcList = [];
+    images.forEach(img => srcList.push(img.getAttribute('src')));
+    srcList.forEach(src => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = src;
+      document.head.appendChild(link);
+    });
+  }
+  // 预加载所有图片（如果作品数量不多可以开启）
+  // preloadImages();
+</script>
+
+<style>
+  /* 组件内样式，自动作用域，不影响外部 */
+  .works-gallery {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background-color: #f8fafc;
+    line-height: 1.5;
+  }
+
+  .gallery-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .gallery-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #3b3b3b, #0f172a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .gallery-header p {
+    color: #475569;
+    font-size: 1.1rem;
+  }
+
+  .works-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  .work-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border-radius: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  }
+
+  .work-card-link:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+
+  .work-card {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 1rem;
+    overflow: hidden;
+    background-color: #e2e8f0;
+  }
+
+  .work-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+    will-change: transform;
+  }
+
+  .work-card-link:hover .work-image {
+    transform: scale(1.05);
+  }
+
+  .work-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem 1.2rem;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.5) 70%,
+      transparent 100%
+    );
+    color: white;
+    backdrop-filter: blur(2px);
+    transform: translateY(0);
+    transition: background 0.2s;
+  }
+
+  .work-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .work-description {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .works-placeholder {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #94a3b8;
+    background-color: #f8fafc;
+    border-radius: 1rem;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  }
+
+  /* 移动端优化 */
+  @media (max-width: 640px) {
+    .works-gallery {
+      padding: 2rem 1rem;
+    }
+    .gallery-header h1 {
+      font-size: 2rem;
+    }
+    .works-grid {
+      gap: 1.2rem;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+    .work-info {
+      padding: 0.75rem 1rem;
+    }
+    .work-title {
+      font-size: 1rem;
+    }
+    .works-placeholder {
+      padding: 3rem 1rem;
+    }
+  }
+  /* ... 原有样式 ... */
+
+  /* 模态框样式 */
+  .lightbox {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .lightbox.show {
+    display: flex;
+  }
+
+  .lightbox-content {
+    max-width: 90%;
+    max-height: 80%;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1001;
+  }
+
+  .close:hover {
+    color: #ccc;
+  }
+
+  .caption {
+    margin-top: 10px;
+    color: #fff;
+    font-size: 16px;
+    text-align: center;
+  }
+  /* 箭头样式 */
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 16px;
+  user-select: none;
+  z-index: 1002;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.lightbox-prev:hover,
+.lightbox-next:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.lightbox-prev {
+  left: 20px;
+}
+
+.lightbox-next {
+  right: 20px;
+}
+
+/* 小屏幕适配 */
+@media (max-width: 640px) {
+  .lightbox-prev,
+  .lightbox-next {
+    font-size: 30px;
+    padding: 10px;
+  }
+  .lightbox-prev {
+    left: 10px;
+  }
+  .lightbox-next {
+    right: 10px;
+  }
+}
+</style>
